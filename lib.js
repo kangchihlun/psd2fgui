@@ -12,6 +12,8 @@ const path = require('path');
 const crypto = require('crypto');
 const archiver = require('archiver');
 const xmlbuilder = require('xmlbuilder');
+var shell = require('shelljs');
+
 
 //The group name prefix identified as a component.
 const componentPrefix = 'Com';
@@ -81,7 +83,7 @@ exports.convert = function (psdFile, outputFile, option, buildId) {
 
         targetPackage.resources.forEach(function (item) {
             var resNode = resourcesNode.ele(item.type);
-            resNode.att('id', item.id).att('name', item.name).att('path', '/');
+            resNode.att('id', item.id).att('name', item.name)
             if (item.type == 'image') {
                 if (item.scale9Grid) {
                     resNode.att('scale', item.scale);
@@ -89,8 +91,19 @@ exports.convert = function (psdFile, outputFile, option, buildId) {
                 }
             }
 
-            if (item.type == 'image')
+            if (item.type == 'image'){
+                var assetspath = '/assets/texture/'
+                var tgtpath = assetspath
+                if (item.name.indexOf('btn') != -1) {
+                    tgtpath = assetspath +'btn/'
+                    resNode.att('path',tgtpath)
+                    item.name = tgtpath + item.name
+                    var dirpath = path.join(targetPackage.basePath, tgtpath)
+                    if (!fs.existsSync(dirpath))
+                        fs.mkdirSync(dirpath, { recursive: true })
+                }
                 savePromises.push(item.data.saveAsPng(path.join(targetPackage.basePath, item.name)));
+            }
             else
                 savePromises.push(fs.writeFile(path.join(targetPackage.basePath, item.name), item.data));
         });
@@ -264,7 +277,8 @@ function createPackageItem(type, fileName, data) {
         item = {};
         item.type = type;
         item.id = targetPackage.getNextItemId();
-
+        // 判斷類型
+        item.path = '/'
         var i = fileName.lastIndexOf('.');
         var basename = fileName.substr(0, i);
         var ext = fileName.substr(i);
@@ -334,6 +348,7 @@ function parseNode(aNode, rootNode, displayList, onElementCallback) {
     }
     else {
         var typeTool = aNode.get('typeTool');
+        // 字
         if (typeTool) {
             child = xmlbuilder.create('text');
             str = 'n' + (displayList.children.length + 1);
@@ -355,11 +370,13 @@ function parseNode(aNode, rootNode, displayList, onElementCallback) {
             child.att('vAlign', 'middle');
             child.att('autoSize', 'none');
             if (!(targetPackage.exportOption & exports.constants.IGNORE_FONT))
-                child.att('font', typeTool.fonts()[0]);
+                // 強制使用微軟雅黑
+                child.att('font',"Microsoft YaHei")
             child.att('fontSize', typeTool.sizes()[0]);
             child.att('color', convertToHtmlColor(typeTool.colors()[0]));
         }
         else if (!aNode.isEmpty()) {
+            // 圖片
             packageItem = createImage(aNode);
             if (specialUsage == 'icon')
                 child = xmlbuilder.create('loader');
