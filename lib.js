@@ -19,7 +19,7 @@ var shell = require('shelljs');
 const componentPrefix = 'Com';
 
 //The group name prefix identified as a common button.
-const commonButtonPrefix = 'Button';
+const commonButtonPrefix = 'btn';
 
 //The group name prefix identified as a checkbox button.
 const checkButtonPrefix = 'CheckButton';
@@ -84,14 +84,12 @@ exports.convert = function (psdFile, outputFile, option, buildId) {
         targetPackage.resources.forEach(function (item) {
             var resNode = resourcesNode.ele(item.type);
             resNode.att('id', item.id).att('name', item.name)
-            if (item.type == 'image') {
+
+            if (item.type == 'image'){
                 if (item.scale9Grid) {
                     resNode.att('scale', item.scale);
                     resNode.att('scale9Grid', item.scale9Grid);
                 }
-            }
-
-            if (item.type == 'image'){
                 var assetspath = '/assets/texture/'
                 var tgtpath = assetspath
                 if (item.name.indexOf('btn') != -1) {
@@ -104,8 +102,20 @@ exports.convert = function (psdFile, outputFile, option, buildId) {
                 }
                 savePromises.push(item.data.saveAsPng(path.join(targetPackage.basePath, item.name)));
             }
-            else
+            else{
+                console.log(item.name)
+                var viewspath = '/views/texture/'
+                if (item.name.indexOf('btn') != -1) {
+                    tgtpath = viewspath +'btn/'
+                    resNode.att('path',tgtpath)
+                    item.name = tgtpath + item.name
+                    var dirpath = path.join(targetPackage.basePath, tgtpath)
+                    if (!fs.existsSync(dirpath))
+                        fs.mkdirSync(dirpath, { recursive: true })
+                }
+
                 savePromises.push(fs.writeFile(path.join(targetPackage.basePath, item.name), item.data));
+            }
         });
 
         savePromises.push(fs.writeFile(path.join(targetPackage.basePath, 'package.xml'),
@@ -228,7 +238,7 @@ function createButton(aNode, instProps) {
         if (nodeName.indexOf('@title') != -1) {
             if (child.attributes['text']) {
                 instProps['@title'] = child.attributes['text'].value;
-                child.removeAttribute('text');
+                //child.removeAttribute('text');
             }
         }
         else if (nodeName.indexOf('@icon') != -1) {
