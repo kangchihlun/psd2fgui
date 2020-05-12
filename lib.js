@@ -30,6 +30,9 @@ const radioButtonPrefix = 'RadioButton';
 //The layer name suffix of each status of the button.
 const buttonStatusSuffix = ['@up', '@down', '@over', '@selectedOver'];
 
+// GoldnetIT naming conventions
+const GDdirPrefixArr = ['ani','avatar','bg','btn','card','poker','dialog','label','pop','progress','room','other','com']
+
 exports.constants = {
     NO_PACK: 1,
     IGNORE_FONT: 2
@@ -104,15 +107,19 @@ exports.convert = function (psdFile, outputFile, option, buildId) {
             }
             else{
                 console.log(item.name)
-                var viewspath = '/views/texture/'
-                if (item.name.indexOf('btn') != -1) {
-                    tgtpath = viewspath +'btn/'
-                    resNode.att('path',tgtpath)
-                    item.name = tgtpath + item.name
-                    var dirpath = path.join(targetPackage.basePath, tgtpath)
-                    if (!fs.existsSync(dirpath))
-                        fs.mkdirSync(dirpath, { recursive: true })
-                }
+                var viewspath = '/views/'
+                var tgtpath = viewspath
+                GDdirPrefixArr.forEach(function (prf) {
+                    if (item.name.indexOf(prf) != -1) {
+                        tgtpath += prf+'/'
+                        return true
+                    }
+                })
+                resNode.att('path',tgtpath)
+                item.name = tgtpath + item.name
+                var dirpath = path.join(targetPackage.basePath, tgtpath)
+                if (!fs.existsSync(dirpath))
+                    fs.mkdirSync(dirpath, { recursive: true })
 
                 savePromises.push(fs.writeFile(path.join(targetPackage.basePath, item.name), item.data));
             }
@@ -269,7 +276,7 @@ function createButton(aNode, instProps) {
 
     if (imageCnt == 1) {
         extension.att('downEffect', 'scale');
-        extension.att('downEffectValue', '1.1');
+        extension.att('downEffectValue', '0.95');
     }
 
     return createPackageItem('component', aNode.get('name') + '.xml', component.end({ pretty: true }));
@@ -328,27 +335,36 @@ function parseNode(aNode, rootNode, displayList, onElementCallback) {
         specialUsage = 'icon';
 
     if (aNode.isGroup()) {
-        if (nodeName.indexOf(componentPrefix) == 0) {
-            packageItem = createComponent(aNode);
-            child = xmlbuilder.create('component');
-            str = 'n' + (displayList.children.length + 1);
-            child.att('id', str + '_' + targetPackage.itemIdBase);
-            child.att('name', specialUsage ? specialUsage : str);
-            child.att('src', packageItem.id);
-            child.att('fileName', packageItem.name);
-            child.att('xy', (aNode.left - rootNode.left) + ',' + (aNode.top - rootNode.top));
+        var nodeName_s = nodeName.toLowerCase()
+        var bFoundComp = false
+        for(var i =0;i<GDdirPrefixArr.length;i++ ){
+            if(nodeName_s.indexOf(GDdirPrefixArr[i]) == 0){
+                bFoundComp=true
+                break
+            }
         }
-        else if (nodeName.indexOf(commonButtonPrefix) == 0 || nodeName.indexOf(checkButtonPrefix) == 0 || nodeName.indexOf(radioButtonPrefix) == 0) {
+
+        if (nodeName.indexOf(commonButtonPrefix) == 0 || nodeName.indexOf(checkButtonPrefix) == 0 || nodeName.indexOf(radioButtonPrefix) == 0) {
             instProps = {};
             packageItem = createButton(aNode, instProps);
             child = xmlbuilder.create('component');
             str = 'n' + (displayList.children.length + 1);
             child.att('id', str + '_' + targetPackage.itemIdBase);
-            child.att('name', specialUsage ? specialUsage : str);
+            child.att('name', nodeName + (displayList.children.length + 1));
             child.att('src', packageItem.id);
             child.att('fileName', packageItem.name);
             child.att('xy', (aNode.left - rootNode.left) + ',' + (aNode.top - rootNode.top));
             child.ele({ Button: instProps });
+        }
+        else if ( bFoundComp ) {
+            packageItem = createComponent(aNode);
+            child = xmlbuilder.create('component');
+            str = nodeName + (displayList.children.length + 1);
+            child.att('id', str + '_' + targetPackage.itemIdBase);
+            child.att('name', str);
+            child.att('src', packageItem.id);
+            child.att('fileName', packageItem.name);
+            child.att('xy', (aNode.left - rootNode.left) + ',' + (aNode.top - rootNode.top));
         }
         else {
             var cnt = aNode.children().length;
