@@ -9,10 +9,10 @@ A tool for converting psd file to fairygui package.
 npm install
 ```
 
-### Usage ###
+### 指令要改成這樣，不然目錄內的東西會找不到(原因待查) ###
 
 ```sh
-node convert test/test.psd
+node  convert.js  ./test/test.psd  --nopack
 ```
 
 ### License ###
