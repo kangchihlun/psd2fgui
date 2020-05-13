@@ -248,9 +248,9 @@ function createButton(aNode, instProps) {
                 //child.removeAttribute('text');
             }
         }
-        else if (nodeName.indexOf('@icon') != -1) {
+        else if (nodeName.indexOf('@loader') != -1) {
             if (child.attributes['url']) {
-                instProps['@icon'] = child.attributes['url'].value;
+                instProps['@loader'] = child.attributes['url'].value;
                 child.removeAttribute('url');
             }
         }
@@ -331,7 +331,7 @@ function parseNode(aNode, rootNode, displayList, onElementCallback) {
     var specialUsage;
     if (nodeName.indexOf('@title') != -1)
         specialUsage = 'title';
-    else if (nodeName.indexOf('@icon') != -1)
+    else if (nodeName.indexOf('@loader') != -1)
         specialUsage = 'icon';
 
     if (aNode.isGroup()) {
@@ -385,6 +385,7 @@ function parseNode(aNode, rootNode, displayList, onElementCallback) {
                 child.att('xy', '0,' + (aNode.top - rootNode.top - 4));
                 child.att('size', rootNode.width + ',' + (aNode.height + 8));
                 child.att('align', 'center');
+                child.att('name','textTitle');
             }
             else {
                 child.att('xy', (aNode.left - rootNode.left - 4) + ',' + (aNode.top - rootNode.top - 4));
