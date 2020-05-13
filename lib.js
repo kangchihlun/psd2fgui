@@ -12,7 +12,7 @@ const path = require('path');
 const crypto = require('crypto');
 const archiver = require('archiver');
 const xmlbuilder = require('xmlbuilder');
-var shell = require('shelljs');
+
 
 
 //The group name prefix identified as a component.
