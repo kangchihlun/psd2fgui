@@ -95,14 +95,18 @@ exports.convert = function (psdFile, outputFile, option, buildId) {
                 }
                 var assetspath = '/assets/texture/'
                 var tgtpath = assetspath
-                if (item.name.indexOf('btn') != -1) {
-                    tgtpath = assetspath +'btn/'
-                    resNode.att('path',tgtpath)
-                    item.name = tgtpath + item.name
-                    var dirpath = path.join(targetPackage.basePath, tgtpath)
-                    if (!fs.existsSync(dirpath))
-                        fs.mkdirSync(dirpath, { recursive: true })
-                }
+                // 放到特定分類目錄
+                GDdirPrefixArr.forEach(function (prf) {
+                    if (item.name.indexOf(prf) != -1) {
+                        tgtpath = assetspath +prf+'/'
+                    }
+                })
+                resNode.att('path',tgtpath)
+                item.name = tgtpath + item.name
+                var dirpath = path.join(targetPackage.basePath, tgtpath)
+                if (!fs.existsSync(dirpath))
+                    fs.mkdirSync(dirpath, { recursive: true })
+
                 savePromises.push(item.data.saveAsPng(path.join(targetPackage.basePath, item.name)));
             }
             else{
@@ -245,7 +249,6 @@ function createButton(aNode, instProps) {
         if (nodeName.indexOf('@title') != -1) {
             if (child.attributes['text']) {
                 instProps['@title'] = child.attributes['text'].value;
-                //child.removeAttribute('text');
             }
         }
         else if (nodeName.indexOf('@loader') != -1) {
@@ -377,7 +380,7 @@ function parseNode(aNode, rootNode, displayList, onElementCallback) {
         // 字
         if (typeTool) {
             child = xmlbuilder.create('text');
-            str = 'n' + (displayList.children.length + 1);
+            str = nodeName
             child.att('id', str + '_' + targetPackage.itemIdBase);
             child.att('name', specialUsage ? specialUsage : str);
             child.att('text', typeTool.textValue);
@@ -385,7 +388,8 @@ function parseNode(aNode, rootNode, displayList, onElementCallback) {
                 child.att('xy', '0,' + (aNode.top - rootNode.top - 4));
                 child.att('size', rootNode.width + ',' + (aNode.height + 8));
                 child.att('align', 'center');
-                child.att('name','textTitle');
+                //child.att('name','textTitle');
+
             }
             else {
                 child.att('xy', (aNode.left - rootNode.left - 4) + ',' + (aNode.top - rootNode.top - 4));
@@ -414,6 +418,9 @@ function parseNode(aNode, rootNode, displayList, onElementCallback) {
             child.att('name', specialUsage ? specialUsage : str);
             child.att('xy', (aNode.left - rootNode.left) + ',' + (aNode.top - rootNode.top));
             if (specialUsage == 'icon') {
+                // loader 名字本身要去除掉 @loader
+                var loadername = nodeName.substr(0,nodeName.indexOf("@loader"));
+                child.att('name',loadername);
                 child.att('size', aNode.width + ',' + aNode.height);
                 child.att('url', 'ui://' + targetPackage.id + packageItem.id);
             }
