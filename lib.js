@@ -387,9 +387,9 @@ function parseNode(aNode, rootNode, displayList, onElementCallback) {
             if (specialUsage == 'title') {
                 child.att('xy', '0,' + (aNode.top - rootNode.top - 4));
                 child.att('size', rootNode.width + ',' + (aNode.height + 8));
-                child.att('align', 'center');
-                //child.att('name','textTitle');
-
+                str = typeTool.alignment()[0];
+                if (str != 'left')
+                    child.att('align', str);
             }
             else {
                 child.att('xy', (aNode.left - rootNode.left - 4) + ',' + (aNode.top - rootNode.top - 4));
